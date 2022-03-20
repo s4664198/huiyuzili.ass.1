@@ -1,0 +1,124 @@
+---
+title: "Assignment 1"
+author: "Huiyuzi Li s4664198"
+date: "3/20/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+##RMarkdown editing
+#**_R Markdown is a file format for making dynamic documents with R.**_
+
+
+```{r}
+#R Markdown is a file format for making dynamic documents with R. 
+library(tidyverse)
+library(knitr)
+library(skimr)
+fastfood<-read.csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-09-04/fastfood_calories.csv')
+knitr::kable(head(fastfood[1:10,1:5]))
+
+
+filter(fastfood, calories>1000)
+
+dont_eat_this<- fastfood %>%
+  filter(total_fat>40 & total_carb>80)%>%
+  arrange(desc(total_fat))
+
+heavy_food <- fastfood %>%
+  mutate(heavy_food=case_when(calories>500 ~ "heavy", calories<250 ~ "low", T ~ "average")) %>%
+  count(heavy_food)
+
+skim(fastfood)
+
+fastfood %>%
+  count(restaurant) %>%
+  arrange(desc(restaurant))
+
+fastfood %>%
+  group_by(restaurant) %>%
+  summarise(Avg_calories = mean(calories)) %>%
+  ungroup()
+
+fastfood_broader <- fastfood %>%
+  group_by(restaurant) %>%
+  mutate(average_calories = mean(calories)) %>%
+  mutate(max_fat = max(total_fat)) %>%
+  mutate(min_cholesterol =min(cholesterol)) %>%
+  ungroup()
+
+fastfood %>%
+  group_by(restaurant) %>%
+  ggplot(aes(x=restaurant, y=total_fat))+
+  geom_col()
+
+# This dataset contains both discrete datatype and continuous datatype and that's why 
+#we should choose f<-ggplot(). This chart might help people make the decision (choose which restaurant) more clearly by demonstrating the total fat of different restaurants.
+
+
+  
+fastfood %>%
+  mutate(cholesterol_sodium=cholesterol+sodium)
+
+fastfood %>%
+  select(-salad)
+17
+fastfood %>%
+  filter(restaurant == "Mcdonalds") %>%
+  ggplot(aes(sugar,protein)) +
+  geom_point()
+18
+
+skim(fastfood)
+fastfood$restaurant<-as_factor(fastfood$restaurant)
+class(fastfood$restaurant)
+fastfood$salad<-as_factor(fastfood$salad)
+class(fastfood$salad)
+fastfood$item<-as_factor(fastfood$item)
+class(fastfood$item)
+
+
+
+19
+calories_type <- fastfood %>%
+  mutate(calories_type=cut_number(calories,3,labels=c("low","med","high")))%>%
+  arrange(desc(calories))
+20.
+
+calories_type %>%
+  ggplot(aes(calories_type,fill= calories_type))+
+  geom_bar() +
+  facet_wrap(~restaurant) +
+  coord_flip() +
+  labs(x = "Calories Type", y = "Number of Items in Calories Type ", colour = "Calories Type",
+       title = "Bar Chart", caption = "Figure 1")
+
+21.
+  trans_fat_percent <- fastfood%>%
+    mutate(trans_fat_percent=round((trans_fat/total_fat)*100,2))
+22. 
+trans_fat_percent %>%
+ ggplot(aes(trans_fat,fill=restaurant))+
+  geom_bar()+
+  facet_wrap(~restaurant)+
+  labs(x="Trans_fat",y="Total fat in items")
+23.
+fastfood %>%
+  group_by(restaurant)%>%
+  summarise(Average_total_fat=mean(total_fat))%>%
+  ungroup()
+
+24.
+fastfood%>%
+ggplot(aes(restaurant,total_fat,fill=restaurant)) +
+  geom_boxplot() +
+  labs(x = "Name of the Restaurant", y = "Total Fat ", colour = "Restaurant", 
+       title = "Box Plot", caption = "Figure 3")
+
+           
