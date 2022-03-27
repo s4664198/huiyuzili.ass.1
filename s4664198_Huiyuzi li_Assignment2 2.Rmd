@@ -1,0 +1,317 @@
+---
+title: "Assessment2.rmd"
+author: "Huiyuzi Li s4664198"
+date: "2022/3/24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+#This is an R Markdown document. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+## **Packages**
+
+```{r}
+#install.packages("tidyverse")
+#install.packages("knitr")
+#install.packages("tidymodels")
+#install.packages("modeldata")
+
+
+library(tidyverse)
+library(knitr)
+library(skimr)
+library(tidymodels)
+library(modeldata)
+library(dplyr)
+
+```
+
+## Thanksgiving Dataset
+#We are going to use the `Thanksgiving.csv` dataset
+
+### Import the `Thanksgiving.csv` dataset
+```{r}
+Thanksgiving <- read.csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-11-20/thanksgiving_meals.csv')
+
+```
+
+
+### **slove below Data Wrangling and visualization questions**
+
+### 1.Display the first 10 rows of the dataset using `kable()` function.
+
+```{r}
+knitr::kable(Thanksgiving[1:10,1:5])
+
+#Display first 10 rows and 5 columns
+```
+
+
+### 2.Using `skim()` display the summary of variables.
+
+
+```{r}
+skim(Thanksgiving)
+
+#Not every type of variables are useful to predict family income. There's a lot of data types showing too much missing values, Those data types might be invalid.  
+
+```
+
+
+### 3.Use `fct_reorder` and `parse_number` functions to create a factor variable `family_income`
+
+```{r}
+Thanksgiving1 <- Thanksgiving %>%
+  mutate(family_income = fct_reorder(family_income, parse_number(family_income)))
+
+skim(Thanksgiving1)
+
+```
+
+
+### 4.What is the number of people who celebrate?
+
+```{r}
+Thanksgiving %>%
+  count(celebrate)
+        
+#980
+```
+
+
+### 5.What are categories and insights for each main dish served the method it is prepared?
+
+```{r}
+Thanksgiving %>%
+  count(main_dish,main_prep)
+
+```
+
+
+### 6.Create 3 different data viz showing insights for main dish served and the method. Provide your own legend and use themes. Write 2-3 sentences with your explanation of the each insight.
+
+```{r}
+#First type 1
+
+Thanksgiving2<-Thanksgiving [!(Thanksgiving$main_dish=="I don't know" | Thanksgiving$main_prep=="I don't know"),]
+
+Thanksgiving2 %>%
+  drop_na(main_dish) %>%
+  drop_na(main_prep) %>%
+  ggplot(aes(main_prep,main_dish))+geom_count(aes(color = ..n..))
+
+#Because Thanksgiving cuisine Turducken basically only have one cooking method, which is roasted. However, people usually use different methods to cook roast beef.
+
+```
+
+
+
+```{r}
+#First type 2
+
+Thanksgiving2<-Thanksgiving [!(Thanksgiving$main_dish=="I don't know" | Thanksgiving$main_prep=="I don't know"),]
+
+Thanksgiving2 %>%
+  drop_na(main_dish) %>%
+  drop_na(main_prep) %>%
+  ggplot(aes(main_prep,main_dish,color= main_dish))+geom_jitter()
+
+#Turkey is the most popular food on Thanksgiving Day, and baked or roasted cooking method are used by most people. A few people will also choose Ham or Pork as main dish, however most of common cooking method for that is baked only.
+
+```
+
+```{r}
+#Second type
+
+Thanksgiving2<-Thanksgiving [!(Thanksgiving$main_dish=="I don't know"),]
+
+Thanksgiving2 %>%
+  drop_na(main_dish) %>%
+  ggplot(aes(main_dish))+geom_bar(colour= "red",fill="white")
+
+#Most of family choosing turkey as their main cuisine on thanksgiving day, and turducken would be the least favorable choice.
+```
+```{r}
+# Tertiary type
+
+Thanksgiving2<-Thanksgiving [!(Thanksgiving$main_prep=="I don't know"),]
+
+Thanksgiving2 %>%
+  drop_na(main_prep) %>%
+  ggplot(aes(main_prep))+geom_bar()
+
+#Baking and baking are two of the most popular cooking method to prepare the Thanksgiving dish.
+```
+
+
+### 7. How many use cranberry sauce? How many use gravy? 
+
+```{r}
+Thanksgiving %>%
+  count(gravy)
+
+#892
+```
+
+
+```{r}
+Thanksgiving_cranberry<-Thanksgiving%>%
+  drop_na(cranberry)
+
+Thanksgiving_cranberry<-Thanksgiving_cranberry[!(Thanksgiving_cranberry$cranberry=="None"),]
+
+Thanksgiving_cranberry%>%
+  count(cranberry)
+
+#828
+```
+
+
+### 8-9. What is the distribution of those who celebrate across income ranges. Create a data viz.
+
+
+```{r}
+
+Thanksgiving4<-Thanksgiving1 [!(Thanksgiving1$celebrate=="No"| Thanksgiving1$family_income=="Prefer not to answer"),]
+
+Thanksgiving4 %>%
+  drop_na(family_income) %>%
+  drop_na(celebrate) %>%
+  group_by(family_income) %>%
+  summarize(celebrate = n()) %>%
+  ggplot(aes(family_income, celebrate))+geom_col()
+
+
+```
+```{r}
+Thanksgiving4<-Thanksgiving [!(Thanksgiving$celebrate=="No"| Thanksgiving$family_income=="Prefer not to answer"),]
+
+
+Thanksgiving4$family_income <- factor(Thanksgiving4$family_income, levels=c("$0 to $9,999","$10,000 to $24,999","$25,000 to $49,999","$50,000 to $74,999","$75,000 to $99,999", "$100,000 to $124,999","$125,000 to $149,999","$150,000 to $174,999","$175,000 to $199,999","$200,000 and up"))
+
+Thanksgiving4 %>%
+  drop_na(family_income) %>%
+  drop_na(celebrate) %>%
+  group_by(family_income) %>%
+  summarize(celebrate = n())%>%
+  ggplot(aes(family_income, celebrate))+geom_col()
+
+#After using the fct_order function, there was an unexpected data column Mountain on the chart which is not needed, so I manually set up those data into factor and set the order to solve the problem.  
+
+#The data are positive skewed, this made the data's Mode < median < mean, which means most of family who celebrate the Thanksgiving Day are on the left.From this we can conclude that in the middle and lower family income calsses are indicate a high interest in celebrating Thanksgving, as family incomes have risen, interest in celebrating the Thanksgiving has declined significantly.
+
+```
+
+
+### 10. Use the following code to create a new data set.
+`
+select(id, starts_with("side"),
+         starts_with("pie"),
+         starts_with("dessert")) %>%
+  select(-side15, -pie13, -dessert12) %>%
+  gather(type, value, -id) %>%
+  filter(!is.na(value),
+         !value %in% c("None", "Other (please specify)")) %>%
+  mutate(type = str_remove(type, "\\d+"))
+`
+
+```{r}
+Thanksgiving_Create <- Thanksgiving %>%
+  select(id, starts_with("side"),
+         starts_with("pie"),
+         starts_with("dessert")) %>%
+  select(-side15, -pie13, -dessert12) %>%
+  gather(type, value, -id) %>%
+  filter(!is.na(value),
+         !value %in% c("None", "Other (please specify)")) %>%
+  mutate(type = str_remove(type, "\\d+"))
+
+#Select ID first, and everything that begins with Side, pie, and Dessert. Select the people who eat side15, pie13, dessert12 and ranked them in descending order. After that find their type, value and id, rank their id in descending order as well. Next, filter the invalid values add a line called type, remove type's("\\d+") which means match 2 or more digits.
+
+```
+
+
+
+### 11-12. Intall package `widyr` and use `pairwise_cor()` function https://www.rdocumentation.org/packages/widyr/versions/0.1.3/topics/pairwise_cor
+#Write 2-3 sentences with your explanation of what it does.
+#Use this code for the new dataset
+`
+#pairwise_cor(value, id, sort = TRUE)
+`
+#Write 1 sentence with your explanation of what insights it shows.
+
+```{r}
+#install.packages("widyr")
+install.packages("widyr")
+
+library(widyr)
+```
+
+
+```{r}
+Thanksgiving_Create %>%
+  pairwise_cor(value, id, sort = TRUE)
+
+#Explains the correlation between different types of items.
+```
+
+
+### 13. Use `lm()` or randomForest() function to build a model that predict a family income based on data in the dataset.
+
+
+```{r}
+
+install.packages("randomForest")
+
+library(randomForest)
+
+```
+
+
+```{r}
+#randomForest 1
+
+rf <- randomForest(family_income ~  celebrate , data = Thanksgiving1, na.action = na.omit)
+
+  print(rf)
+
+# Using the celebrate to predict family income which has an estimate of error rate 82.05%. 
+# Assume that people with different family incomes have different attitudes towards whether or not to celebrate Thanksgiving.  
+# However, this can be considered inaccurate forecast.
+```
+
+
+```{r}
+#randomForest 2
+
+rf <- randomForest(family_income ~  celebrate + community_type + age + us_region, data = Thanksgiving1, na.action = na.omit)
+
+  print(rf)
+  
+# Using the type of the community, age, living region to predict family income which has an estimate of error rate 82.71%. 
+# Assume that family which have the age live in different region and have the different type of community could have different type of family income.
+# However, this combination can be considered inaccurate forecast.
+```
+
+```{r}
+
+#randomForest 3
+
+rf <- randomForest(family_income ~ celebrate + travel + work_black_friday + community_type + us_region, data = Thanksgiving1, na.action = na.omit)
+
+  print(rf)
+
+
+# Using the items based on the first two test delete age and add travel and whether work at Black Friday to predict family income which has an estimate of error rate 83.58%. 
+# Assume that there was a correlation between family income and travel and whether they worked on Black Friday.  
+# However, this combination should be considered as an inaccurate forecast.
+  
+
+```
+
+
